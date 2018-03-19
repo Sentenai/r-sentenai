@@ -41,6 +41,10 @@ Sentenai <- setRefClass("Sentenai",
         streams[lapply(streams, function(s){ grepl(name, s$name)} ) == T]
       }
     },
+    # `statements` is a JSON AST query string for now
+    query = function(statements) {
+      Cursor$new(client=.self, query=statements)$get()
+    },
     fields = function(stream) {
       url <- paste(c(host, 'streams', stream$name, 'fields'), collapse = '/')
       res <- GET(url, get_api_headers())
@@ -84,6 +88,23 @@ Cursor <- setRefClass("Cursor",
       } else {
         print("TODO: handle errors")
       }
+    },
+    spans = function () {
+      cid <- query_id
+      spans <- c()
+
+      while (!is.null(cid)) {
+        url <- sprintf("%s/query/%s/spans", client$host, cid)
+        r <- content(GET(url, client$get_api_headers()))
+
+        # TODO: parse start/end into POSIXlt?
+        # TODO: hold onto `spans` reference
+        spans <- c(spans, r$spans)
+        cid <- r$cursor
+      }
+
+      sps <- lapply(spans, function(x) { x["cursor"] <- NULL; x })
+      sps
     }
   )
 )
