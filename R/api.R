@@ -70,3 +70,20 @@ Sentenai <- setRefClass("Sentenai",
 Stream <- setRefClass("Stream",
   fields = list(name = "character")
 )
+
+Cursor <- setRefClass("Cursor",
+  fields = list(client = "Sentenai", query = "character", limit = "numeric", query_id = "character"),
+  methods = list(
+    # TODO: can this happen in a constructor? look into $initialize
+    get = function () {
+      url <- sprintf("%s/query", client$host)
+      r <- POST(url, client$get_api_headers(), body = query, encode = "json")
+      if (status_code(r) == 201) {
+        query_id <<- headers(r)$location
+        .self
+      } else {
+        print("TODO: handle errors")
+      }
+    }
+  )
+)
