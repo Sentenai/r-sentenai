@@ -14,9 +14,8 @@
 Sentenai <- setRefClass("Sentenai",
   fields = list(auth_key = "character", host = "character"),
   methods = list(
-    # TODO: Stream instance? is that a thing?name
     get = function(stream, event_id=NULL) {
-      parts = c(host, 'streams', stream)
+      parts = c(host, 'streams', stream$name)
       if (!is.null(event_id)) {
         parts <- c(parts, 'events', event_id)
       }
@@ -26,7 +25,7 @@ Sentenai <- setRefClass("Sentenai",
     },
     # TODO: start, end
     field_stats = function(stream, field) {
-      url <- paste(c(host, 'streams', stream, 'fields', field, 'stats'), collapse = '/')
+      url <- paste(c(host, 'streams', stream$name, 'fields', field, 'stats'), collapse = '/')
       res <- GET(url, get_api_headers())
       content(res)
     },
@@ -43,22 +42,22 @@ Sentenai <- setRefClass("Sentenai",
       }
     },
     fields = function(stream) {
-      url <- paste(c(host, 'streams', stream, 'fields'), collapse = '/')
+      url <- paste(c(host, 'streams', stream$name, 'fields'), collapse = '/')
       res <- GET(url, get_api_headers())
       content(res)
     },
     values = function(stream) {
-      url <- paste(c(host, 'streams', stream, 'values'), collapse = '/')
+      url <- paste(c(host, 'streams', stream$name, 'values'), collapse = '/')
       res <- GET(url, get_api_headers())
       content(res)
     },
     newest = function(stream) {
-      url <- paste(c(host, 'streams', stream, 'newest'), collapse = '/')
+      url <- paste(c(host, 'streams', stream$name, 'newest'), collapse = '/')
       res <- GET(url, get_api_headers())
       content(res)
     },
     oldest = function(stream) {
-      url <- paste(c(host, 'streams', stream, 'oldest'), collapse = '/')
+      url <- paste(c(host, 'streams', stream$name, 'oldest'), collapse = '/')
       res <- GET(url, get_api_headers())
       content(res)
     },
@@ -66,4 +65,8 @@ Sentenai <- setRefClass("Sentenai",
       add_headers('Content-Type' = 'application/json', 'Auth-Key' = auth_key)
     }
   )
+)
+
+Stream <- setRefClass("Stream",
+  fields = list(name = "character")
 )
