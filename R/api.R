@@ -75,6 +75,10 @@ Stream <- setRefClass("Stream",
   fields = list(name = "character")
 )
 
+parse_iso_8601 <- function(str) {
+  as.POSIXlt(str, "UTC", "%Y-%m-%dT%H:%M:%S")
+}
+
 Cursor <- setRefClass("Cursor",
   fields = list(client = "Sentenai", query = "character", limit = "numeric", query_id = "character"),
   methods = list(
@@ -97,13 +101,17 @@ Cursor <- setRefClass("Cursor",
         url <- sprintf("%s/query/%s/spans", client$host, cid)
         r <- content(GET(url, client$get_api_headers()))
 
-        # TODO: parse start/end into POSIXlt?
         # TODO: hold onto `spans` reference
         spans <- c(spans, r$spans)
         cid <- r$cursor
       }
 
-      sps <- lapply(spans, function(x) { x["cursor"] <- NULL; x })
+      sps <- lapply(spans, function(s) {
+        s["cursor"] <- NULL
+        s$start <- if(is.null(s$start)) NULL else parse_iso_8601(s$start)
+        s$end <- if(is.null(s$end)) NULL else parse_iso_8601(s$end)
+        s
+      })
       sps
     }
   )
