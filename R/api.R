@@ -14,6 +14,9 @@
 Sentenai <- setRefClass("Sentenai",
   fields = list(auth_key = "character", host = "character"),
   methods = list(
+    initialize = function(auth_key = '', host = 'https://api.sentenai.com') {
+      callSuper(auth_key = auth_key, host = host)
+    },
     get = function(stream, event_id=NULL) {
       parts = c(host, 'streams', stream$name)
       if (!is.null(event_id)) {
