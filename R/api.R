@@ -45,8 +45,8 @@ Sentenai <- setRefClass("Sentenai",
       }
     },
     # `statements` is a JSON AST query string for now
-    query = function(statements) {
-      Cursor$new(client=.self, query=statements)$get()
+    query = function(statements, limit = Inf) {
+      Cursor$new(client = .self, query = statements, limit = limit)$get()
     },
     fields = function(stream) {
       url <- paste(c(host, 'streams', stream$name, 'fields'), collapse = '/')
@@ -100,8 +100,13 @@ Cursor <- setRefClass("Cursor",
       cid <- query_id
       spans <- c()
 
-      while (!is.null(cid)) {
-        url <- sprintf("%s/query/%s/spans", client$host, cid)
+      while (!is.null(cid) & length(spans) < limit) {
+        if (is.finite(limit)) {
+          url <- sprintf("%s/query/%s/spans?limit=%d", client$host, cid, limit)
+        } else {
+          url <- sprintf("%s/query/%s/spans", client$host, cid)
+        }
+
         r <- content(GET(url, client$get_api_headers()))
 
         # TODO: hold onto `spans` reference
