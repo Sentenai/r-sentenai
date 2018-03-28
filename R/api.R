@@ -82,6 +82,10 @@ parse_iso_8601 <- function(str) {
   as.POSIXlt(str, "UTC", "%Y-%m-%dT%H:%M:%S")
 }
 
+to_iso_8601 <- function(timestamp) {
+  strftime(timestamp, "%FT%H:%M:%OS3Z")
+}
+
 Cursor <- setRefClass("Cursor",
   fields = list(client = "Sentenai", query = "character", limit = "numeric", query_id = "character"),
   methods = list(
@@ -121,6 +125,49 @@ Cursor <- setRefClass("Cursor",
         s
       })
       sps
+    },
+    .slice = function (cursor_id, start, end, max_retries = 3) {
+      retries <- 0
+      cursor <- sprintf(
+        "%s+%s+%s",
+        strsplit(cursor_id, "\\+")[[1]][[1]],
+        to_iso_8601(start),
+        to_iso_8601(end)
+      )
+      url <- sprintf("%s/query/%s/events", client$host, cursor)
+      events <- c()
+
+      while(!is.null(cursor)) {
+        r <- GET(url, client$get_api_headers())
+        code <- status_code(r)
+
+        if (code == 400) {
+          stop(sprintf("Client error in request for cursor: %s", cursor))
+        } else if (code != 200 & retries >= max_retries) {
+          stop('Failed to get cursor')
+        } else if (code != 200) {
+          retries <- retries + 1
+        } else {
+          # TODO: process this all, not sure how to mimic python lib
+          cont <- content(r)
+          # has info about which streams were queries
+          # print(cont[[1]])
+          # has actual events
+          # print(length(cont[[2]]))
+
+          cursor <- headers(r)$cursor
+          events <- c(events, cont[[2]])
+        }
+      }
+
+      events
+    },
+    dataframe = function () {
+      df <- lapply(spans(), function(span) {
+        # TODO: make these requests concurrently
+        .slice(query_id, span$start, span$end)
+      })
+      df
     }
   )
 )
