@@ -26,10 +26,16 @@ Sentenai <- setRefClass("Sentenai",
       res <- GET(url, get_api_headers())
       content(res)
     },
-    # TODO: start, end
-    field_stats = function(stream, field) {
+    field_stats = function(stream, field, start = NULL, end = NULL) {
+      args = list()
+      if (!is.null(start)) {
+        args <- c(args, list(start = to_iso_8601(start)))
+      }
+      if (!is.null(end)) {
+        args <- c(args, list(end = to_iso_8601(end)))
+      }
       url <- paste(c(host, 'streams', stream$name, 'fields', field, 'stats'), collapse = '/')
-      res <- GET(url, get_api_headers())
+      res <- GET(url, get_api_headers(), query = args)
       content(res)
     },
     # TODO: filter by meta
