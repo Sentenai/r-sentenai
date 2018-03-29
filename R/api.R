@@ -56,8 +56,8 @@ Sentenai <- setRefClass("Sentenai",
         collapse = '/'
       )
       res <- GET(url, get_api_headers())
-      # TODO: this returns \n separated JSON events, probably need to split/parse
-      content(res)
+      lines <- strsplit(content(res, as = "text", encoding = "UTF-8"), "\n")[[1]]
+      lapply(lines, function(line) { fromJSON(line) })
     },
     # `statements` is a JSON AST query string for now
     query = function(statements, limit = Inf) {
