@@ -108,7 +108,7 @@ Cursor <- setRefClass("Cursor",
     },
     spans = function () {
       cid <- query_id
-      spans <- c()
+      spans <- list()
 
       while (!is.null(cid) & length(spans) < limit) {
         if (is.finite(limit)) {
@@ -141,7 +141,7 @@ Cursor <- setRefClass("Cursor",
         to_iso_8601(end)
       )
       url <- sprintf("%s/query/%s/events", client$host, cursor)
-      events <- c()
+      events <- list()
 
       while(!is.null(cursor)) {
         r <- GET(url, client$get_api_headers())
