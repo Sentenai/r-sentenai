@@ -50,6 +50,15 @@ Sentenai <- setRefClass("Sentenai",
         streams[lapply(streams, function(s){ grepl(name, s$name)} ) == T]
       }
     },
+    range = function(stream, start, end) {
+      url <- paste(
+        c(host, 'streams', stream$name, 'start', to_iso_8601(start), 'end', to_iso_8601(end)),
+        collapse = '/'
+      )
+      res <- GET(url, get_api_headers())
+      # TODO: this returns \n separated JSON events, probably need to split/parse
+      content(res)
+    },
     # `statements` is a JSON AST query string for now
     query = function(statements, limit = Inf) {
       Cursor$new(client = .self, query = statements, limit = limit)$get()
