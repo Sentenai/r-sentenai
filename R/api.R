@@ -181,6 +181,20 @@ Cursor <- setRefClass("Cursor",
 
       stopCluster(c1)
       df
+    },
+    stats = function (sp = spans()) {
+      deltas <- unlist(lapply(sp, function(span) {
+        difftime(span$end, span$start, units = "secs")
+      }))
+      if (length(deltas) == 0) { return(list()) }
+
+      list(
+        min = min(deltas),
+        max = max(deltas),
+        mean = sum(deltas) / length(deltas),
+        median = sort(deltas)[[round(length(deltas) / 2)]],
+        count = length(deltas)
+      )
     }
   )
 )
