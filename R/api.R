@@ -162,11 +162,18 @@ Cursor <- setRefClass("Cursor",
 
       events
     },
-    dataframe = function () {
-      df <- lapply(spans(), function(span) {
-        # TODO: make these requests concurrently
+    dataframe = function (sp = spans()) {
+      c1 <- makeCluster(detectCores() - 1)
+
+      # this feels fragile
+      clusterExport(c1, "to_iso_8601")
+      clusterEvalQ(c1, library(httr))
+
+      df <- parLapply(c1, sp, function(span) {
         .slice(query_id, span$start, span$end)
       })
+
+      stopCluster(c1)
       df
     }
   )
