@@ -68,9 +68,15 @@ Sentenai <- setRefClass("Sentenai",
       res <- GET(url, get_api_headers())
       content(res)
     },
-    values = function(stream) {
+    values = function(stream, timestamp = NULL) {
+      headers = list()
+      args = list()
+      if (!is.null(timestamp)) {
+        headers = add_headers(timestamp = to_iso_8601(timestamp))
+        args = list(at = to_iso_8601(timestamp))
+      }
       url <- paste(c(host, 'streams', stream$name, 'values'), collapse = '/')
-      res <- GET(url, get_api_headers())
+      res <- GET(url, c(get_api_headers(), headers), body = args)
       content(res)
     },
     newest = function(stream) {
