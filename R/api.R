@@ -95,10 +95,6 @@ Sentenai <- setRefClass("Sentenai",
   )
 )
 
-Stream <- setRefClass("Stream",
-  fields = list(name = "character")
-)
-
 parse_iso_8601 <- function(str) {
   as.POSIXlt(str, "UTC", "%Y-%m-%dT%H:%M:%S")
 }
