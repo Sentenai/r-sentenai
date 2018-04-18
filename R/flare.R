@@ -39,7 +39,7 @@ Cond <- setRefClass("Cond",
       t <- switch(
         typeof(val),
         double = "double",
-        logical = "boolean",
+        logical = "bool",
         character = "string"
       )
       c(
