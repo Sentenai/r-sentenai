@@ -1,5 +1,34 @@
 Stream <- setRefClass("Stream",
-  fields = list(name = "character")
+  fields = list(name = "character"),
+  methods = list(
+    to_ast = function() {
+      list(name = name)
+    }
+  )
+)
+
+select <- function() {
+  Select$new()
+}
+
+Select <- setRefClass("Select",
+  fields = c("query"),
+  methods = list(
+    initialize = function(query = NULL) {
+      callSuper(query = NULL)
+    },
+    span = function(x) {
+      query <<- to_flare(substitute(x))
+      .self
+    },
+    to_ast = function() {
+      if (is.null(query)) {
+        list(select = list(expr = TRUE))
+      } else {
+        list(select = query$to_ast())
+      }
+    }
+  )
 )
 
 Cond <- setRefClass("Cond",
@@ -13,15 +42,10 @@ Cond <- setRefClass("Cond",
         logical = "boolean",
         character = "string"
       )
-      # map vals
-      wrapped = if (typeof(val) == "character") paste0('"', val, '"') else val
-      v <- switch(
-        as.character(wrapped),
-        "TRUE" = "true",
-        "FALSE" = "false",
-        wrapped # default
+      c(
+        list(op = op, arg = list(type = t, val = val)),
+        path$to_ast()
       )
-      sprintf('{ "op": "%s", "arg": { "type": "%s", "val": %s }, "type": "span" }', op, t, v)
     }
   )
 )
@@ -30,7 +54,7 @@ Or <- setRefClass("Or",
   fields = c("left", "right"),
   methods = list(
     to_ast = function() {
-      sprintf('{ "expr": "||", "args": [ %s, %s ] }', left$to_ast(), right$to_ast())
+      list(expr = "||", args = list(left$to_ast(), right$to_ast()))
     }
   )
 )
@@ -39,13 +63,18 @@ And <- setRefClass("Or",
   fields = c("left", "right"),
   methods = list(
     to_ast = function() {
-      sprintf('{ "expr": "&&", "args": [ %s, %s ] }', left$to_ast(), right$to_ast())
+      list(expr = "&&", args = list(left$to_ast(), right$to_ast()))
     }
   )
 )
 
 StreamPath <- setRefClass("StreamPath",
-  fields = c("stream", "path")
+  fields = c("stream", "path"),
+  methods = list(
+    to_ast = function() {
+      list(path = c("event", path), stream = stream$to_ast())
+    }
+  )
 )
 
 make_cond <- function (op) {
@@ -77,8 +106,7 @@ f_env$"||" <- function (left, right) {
   Or$new(left = left, right = right)
 }
 
-to_flare <- function(x) {
-  expr <- substitute(x)
+to_flare <- function(expr) {
   eval(expr, flare_env(expr))
 }
 

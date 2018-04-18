@@ -12,4 +12,5 @@ LazyData: true
 Imports:
     httr,
     parallel,
+    rjson,
 Suggests: testthat
