@@ -1,8 +1,20 @@
 Stream <- setRefClass("Stream",
-  fields = list(name = "character"),
+  fields = c("name", "filter"),
   methods = list(
+    initialize = function(name, filter = NULL) {
+      expr <- substitute(filter)
+      if (is.null(expr)) {
+        callSuper(name = name, filter = filter)
+      } else {
+        callSuper(name = name, filter = to_stream_filters(expr))
+      }
+    },
     to_ast = function() {
-      list(name = name)
+      if (is.null(filter)) {
+        list(name = name)
+      } else {
+        list(name = name, filter = filter$to_ast())
+      }
     }
   )
 )
@@ -77,6 +89,15 @@ StreamPath <- setRefClass("StreamPath",
   )
 )
 
+EventPath <- setRefClass("EventPath",
+  fields = c("path"),
+  methods = list(
+    to_ast = function() {
+      list(path = c("event", path))
+    }
+  )
+)
+
 Par <- setRefClass("Par",
   fields = c("type", "query"),
   methods = list(
@@ -146,6 +167,21 @@ flare_env <- function(expr) {
   stream_env <- list2env(setNames(stream_paths, symbol_list))
 
   clone_env(f_env, parent = stream_env)
+}
+
+to_stream_filters <- function(expr) {
+  eval(expr, stream_filter_env(expr))
+}
+
+stream_filter_env <- function(expr) {
+  symbol_list <- as.list(all_names(expr))
+  event_paths <- lapply(symbol_list, function(sym) {
+    path <- strsplit(sym, "\\.")[[1]]
+    EventPath$new(path = path)
+  })
+  events_env <- list2env(setNames(event_paths, symbol_list))
+
+  clone_env(f_env, parent = events_env)
 }
 
 # climb stack frames searching for where `name` is defined
