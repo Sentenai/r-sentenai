@@ -127,7 +127,7 @@ Cursor <- setRefClass("Cursor",
 
       while (!is.null(cid) & length(spans) < limit) {
         if (is.finite(limit)) {
-          url <- sprintf("%s/query/%s/spans?limit=%d", client$host, cid, limit)
+          url <- sprintf("%s/query/%s/spans?limit=%d", client$host, cid, limit - length(spans))
         } else {
           url <- sprintf("%s/query/%s/spans", client$host, cid)
         }
