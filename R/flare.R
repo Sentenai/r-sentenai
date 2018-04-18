@@ -88,13 +88,30 @@ flare_env <- function(expr) {
   symbol_list <- as.list(all_names(expr))
   stream_paths <- lapply(symbol_list, function(sym) {
     splits <- strsplit(sym, "\\.")[[1]]
-    stream <- eval(as.name(splits[[1]]))
+    # TODO: this probably throws a terrible error msg if the stream is undefined
+    stream <- eval(as.name(splits[[1]]), find_frame(splits[[1]]))
     path <- splits[2:length(splits)]
     StreamPath$new(stream = stream, path = path)
   })
   stream_env <- list2env(setNames(stream_paths, symbol_list))
 
   clone_env(f_env, parent = stream_env)
+}
+
+# climb stack frames searching for where `name` is defined
+find_frame <- function(name) {
+  n <- 1
+  env <- parent.frame(n = n)
+  while (!identical(env, emptyenv())) {
+    if (exists(name, envir = env, inherits = FALSE)) {
+      break
+    }
+
+    env <- parent.frame(n = n)
+    n <- n + 1
+  }
+
+  env
 }
 
 # walk expression and gather all names
