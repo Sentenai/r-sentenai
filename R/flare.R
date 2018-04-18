@@ -59,7 +59,7 @@ Or <- setRefClass("Or",
   )
 )
 
-And <- setRefClass("Or",
+And <- setRefClass("And",
   fields = c("left", "right"),
   methods = list(
     to_ast = function() {
