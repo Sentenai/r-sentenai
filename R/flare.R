@@ -43,7 +43,7 @@ Cond <- setRefClass("Cond",
         character = "string"
       )
       c(
-        list(op = op, arg = list(type = t, val = val)),
+        list(op = op, arg = list(type = t, val = val), type = "span"),
         path$to_ast()
       )
     }
