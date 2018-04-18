@@ -15,7 +15,7 @@ Select <- setRefClass("Select",
   fields = c("query"),
   methods = list(
     initialize = function(query = NULL) {
-      callSuper(query = NULL)
+      callSuper(query = query)
     },
     span = function(x) {
       query <<- to_flare(substitute(x))
@@ -77,6 +77,18 @@ StreamPath <- setRefClass("StreamPath",
   )
 )
 
+Par <- setRefClass("Par",
+  fields = c("type", "query"),
+  methods = list(
+    to_ast = function() {
+      list(
+        type = type,
+        conds = lapply(query, function(q) { q$to_ast() })
+      )
+    }
+  )
+)
+
 make_cond <- function (op) {
   force(op)
   function (path, val) {
@@ -104,6 +116,10 @@ f_env$"||" <- function (left, right) {
   force(left)
   force(right)
   Or$new(left = left, right = right)
+}
+
+f_env$"any_of" <- function(...) {
+  Par$new(type = "any", query = list(...))
 }
 
 to_flare <- function(expr) {
