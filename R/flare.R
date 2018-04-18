@@ -121,6 +121,12 @@ f_env$"||" <- function (left, right) {
 f_env$"any_of" <- function(...) {
   Par$new(type = "any", query = list(...))
 }
+f_env$"all_of" <- function(...) {
+  Par$new(type = "all", query = list(...))
+}
+f_env$"during" <- function(...) {
+  Par$new(type = "during", query = list(...))
+}
 
 to_flare <- function(expr) {
   eval(expr, flare_env(expr))
