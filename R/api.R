@@ -59,9 +59,12 @@ Sentenai <- setRefClass("Sentenai",
       lines <- strsplit(content(res, as = "text", encoding = "UTF-8"), "\n")[[1]]
       lapply(lines, function(line) { fromJSON(line) })
     },
-    # `statements` is a JSON AST query string for now
     query = function(statements, limit = Inf) {
-      Cursor$new(client = .self, query = statements, limit = limit)$get()
+      Cursor$new(
+        client = .self,
+        query = rjson::toJSON(statements$to_ast()),
+        limit = limit
+      )$get()
     },
     fields = function(stream) {
       url <- paste(c(host, 'streams', stream$name, 'fields'), collapse = '/')
@@ -115,6 +118,7 @@ Cursor <- setRefClass("Cursor",
         .self
       } else {
         print("TODO: handle errors")
+        print(status_code(r))
       }
     },
     spans = function () {
