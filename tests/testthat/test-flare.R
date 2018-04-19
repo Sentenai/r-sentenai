@@ -1,3 +1,5 @@
+context('test-flare.R')
+
 json_ast <- function(q) {
   rjson::toJSON(q$to_ast())
 }
@@ -39,5 +41,52 @@ test_that('during', {
     ))
   )
   expected <- '{"select":{"type":"during","conds":[{"op":"==","arg":{"type":"string","val":"bar"},"type":"span","path":["event","foo"],"stream":{"name":"S"}},{"op":">","arg":{"type":"double","val":1.5},"type":"span","path":["event","baz"],"stream":{"name":"S"}}]}}'
+  expect_equal(real, expected)
+})
+
+test_that('stream filters', {
+  s = Stream$new('S', V.season == 'summer')
+  temp <- 77
+  real <- select()$span(s.temperature >= temp && s.sunny == TRUE)$to_ast()
+  expected <- list(
+    select = list(
+      expr = '&&',
+      args = list(
+        list(
+          op = '>=',
+          arg = list(type = 'double', val = 77),
+          type = 'span',
+          path = c('event', 'temperature'),
+          stream = list(
+            name = 'S',
+            filter = list(
+              op = '==',
+              arg = list(type = 'string', val = 'summer'),
+              # TODO: remove these
+              type = 'span',
+              path = c('event', 'season')
+            )
+          )
+        ),
+        list(
+          op = '==',
+          arg = list(type = 'bool', val = TRUE),
+          type = 'span',
+          path = c('event', 'sunny'),
+          stream = list(
+            name = 'S',
+            filter = list(
+              op = '==',
+              arg = list(type = 'string', val = 'summer'),
+              # TODO: remove these
+              type = 'span',
+              path = c('event', 'season')
+            )
+          )
+        )
+      )
+    )
+  )
+
   expect_equal(real, expected)
 })
