@@ -160,9 +160,13 @@ flare_env <- function(expr) {
   stream_paths <- lapply(symbol_list, function(sym) {
     splits <- strsplit(sym, "\\.")[[1]]
     # TODO: this probably throws a terrible error msg if the stream is undefined
-    stream <- eval(as.name(splits[[1]]), find_frame(splits[[1]]))
-    path <- splits[2:length(splits)]
-    StreamPath$new(stream = stream, path = path)
+    val <- eval(as.name(splits[[1]]), find_frame(splits[[1]]))
+    if (class(val) == "Stream") {
+      path <- splits[2:length(splits)]
+      StreamPath$new(stream = val, path = path)
+    } else {
+      val
+    }
   })
   stream_env <- list2env(setNames(stream_paths, symbol_list))
 
