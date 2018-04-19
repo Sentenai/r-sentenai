@@ -1,5 +1,27 @@
 context('test-flare.R')
 
+test_that('Stream takes a name', {
+  name <- 'boston-weather'
+  s <- Stream$new(name)
+  expect_equal(s$name, name)
+  expect_equal(s$filter, NULL)
+})
+
+test_that('Stream can take filters', {
+  name <- 'boston-weather'
+  s <- Stream$new(name, V.foo == 'bar')
+  expect_equal(s$name, name)
+  expect_equal(
+    s$filter$to_ast(),
+    list(
+      op = '==',
+      arg = list(type = 'string', val = 'bar'),
+      type = 'span',
+      path = c('event', 'foo')
+    )
+  )
+})
+
 test_that('Basic select', {
   s <- Stream$new(name = 'S')
   real <- select()$span(s.key == 'something')$to_ast()
