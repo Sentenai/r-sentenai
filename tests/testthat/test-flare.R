@@ -190,6 +190,7 @@ test_that('serial', {
           stream = list(name = 'S')
         ),
         list(
+          # TODO: should have `within = list(seconds = 0)`
           op = '==',
           arg = list(type = 'bool', val = TRUE),
           type = 'span',
@@ -202,6 +203,70 @@ test_that('serial', {
           type = 'span',
           path = c('event', 'event', 'event'),
           stream = list(name = 'S')
+        )
+      )
+    )
+  )
+  expect_equal(real, expected)
+})
+
+test_that('all any serial', {
+  foo <- Stream$new('foo')
+  bar <- Stream$new('bar')
+  baz <- Stream$new('baz')
+  qux <- Stream$new('qux')
+  quux <- Stream$new('quux')
+
+  real <- select()$span(any_of(foo.x == TRUE, bar.y == TRUE))$then(baz.z == TRUE)$then(all_of(qux.α == TRUE, quux.β == TRUE))$to_ast()
+  expected = list(
+    select = list(
+      type = 'serial',
+      conds = list(
+        list(
+          type = 'any',
+          conds = list(
+            list(
+              op = '==',
+              arg = list(type = 'bool', val = TRUE),
+              type = 'span',
+              path = c('event', 'x'),
+              stream = list(name = 'foo')
+            ),
+            list(
+              op = '==',
+              arg = list(type = 'bool', val = TRUE),
+              type = 'span',
+              path = c('event', 'y'),
+              stream = list(name = 'bar')
+            )
+          )
+        ),
+        list(
+          # TODO: within 0 seconds
+          op = '==',
+          arg = list(type = 'bool', val = TRUE),
+          type = 'span',
+          path = c('event', 'z'),
+          stream = list(name = 'baz')
+        ),
+        list(
+          type = 'all',
+          conds = list(
+            list(
+              op = '==',
+              arg = list(type = 'bool', val = TRUE),
+              type = 'span',
+              path = c('event', 'α'),
+              stream = list(name = 'qux')
+            ),
+            list(
+              op = '==',
+              arg = list(type = 'bool', val = TRUE),
+              type = 'span',
+              path = c('event', 'β'),
+              stream = list(name = 'quux')
+            )
+          )
         )
       )
     )
