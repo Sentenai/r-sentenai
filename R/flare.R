@@ -181,7 +181,11 @@ stream_filter_env <- function(expr) {
   symbol_list <- as.list(all_names(expr))
   event_paths <- lapply(symbol_list, function(sym) {
     path <- strsplit(sym, "\\.")[[1]]
-    EventPath$new(path = path)
+    if (path[[1]] == 'V') {
+      EventPath$new(path = path[-1])
+    } else {
+      eval(as.name(sym), find_frame(sym))
+    }
   })
   events_env <- list2env(setNames(event_paths, symbol_list))
 
