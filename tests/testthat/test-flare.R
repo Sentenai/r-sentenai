@@ -1,46 +1,113 @@
 context('test-flare.R')
 
-json_ast <- function(q) {
-  rjson::toJSON(q$to_ast())
-}
-
 test_that('Basic select', {
   s <- Stream$new(name = 'S')
-  real <- json_ast(select()$span(s.key == 'something'))
-  expected <- '{"select":{"op":"==","arg":{"type":"string","val":"something"},"type":"span","path":["event","key"],"stream":{"name":"S"}}}'
+  real <- select()$span(s.key == 'something')$to_ast()
+  expected <- list(
+    select = list(
+      op = '==',
+      arg = list(type = 'string', val = 'something'),
+      type = 'span',
+      path = c('event', 'key'),
+      stream = list(name = 'S')
+    )
+  )
   expect_equal(real, expected)
 })
 
 test_that('Or', {
   s <- Stream$new(name = 'S')
   t <- Stream$new(name = 'T')
-  real <- json_ast(select()$span(s.x == TRUE || t.x == TRUE))
-  expected <- '{"select":{"expr":"||","args":[{"op":"==","arg":{"type":"bool","val":true},"type":"span","path":["event","x"],"stream":{"name":"S"}},{"op":"==","arg":{"type":"bool","val":true},"type":"span","path":["event","x"],"stream":{"name":"T"}}]}}'
+  real <- select()$span(s.x == TRUE || t.x == TRUE)$to_ast()
+  expected <- list(
+    select = list(
+      expr = '||',
+      args = list(
+        list(
+          op = '==',
+          arg = list(type = 'bool', val = TRUE),
+          type = 'span',
+          path = c('event', 'x'),
+          stream = list(name = 'S')
+        ),
+        list(
+          op = '==',
+          arg = list(type = 'bool', val = TRUE),
+          type = 'span',
+          path = c('event', 'x'),
+          stream = list(name = 'T')
+        )
+      )
+    )
+  )
   expect_equal(real, expected)
 })
 
 test_that('any_of', {
   s <- Stream$new(name = 'moose')
-  real <- json_ast(
-    select()$span(any_of(
-      s.x < 0,
-      s.x >= 3.141592653589793,
-      s.b != FALSE
-    ))
+  real <- select()$span(any_of(
+    s.x < 0,
+    s.x >= 3.141592653589793,
+    s.b != FALSE
+  ))$to_ast()
+  expected <- list(
+    select = list(
+      type = 'any',
+      conds = list(
+        list(
+          op = '<',
+          arg = list(type = 'double', val = 0),
+          type = 'span',
+          path = c('event', 'x'),
+          stream = list(name = 'moose')
+        ),
+        list(
+          op = '>=',
+          arg = list(type = 'double', val = 3.14159265358979),
+          type = 'span',
+          path = c('event', 'x'),
+          stream = list(name = 'moose')
+        ),
+        list(
+          op = '!=',
+          arg = list(type = 'bool', val = FALSE),
+          type = 'span',
+          path = c('event', 'b'),
+          stream = list(name = 'moose')
+        )
+      )
+    )
   )
-  expected <- '{"select":{"type":"any","conds":[{"op":"<","arg":{"type":"double","val":0},"type":"span","path":["event","x"],"stream":{"name":"moose"}},{"op":">=","arg":{"type":"double","val":3.14159265358979},"type":"span","path":["event","x"],"stream":{"name":"moose"}},{"op":"!=","arg":{"type":"bool","val":false},"type":"span","path":["event","b"],"stream":{"name":"moose"}}]}}'
   expect_equal(real, expected)
 })
 
 test_that('during', {
   s <- Stream$new(name = 'S')
-  real <- json_ast(
-    select()$span(during(
-      s.foo == 'bar',
-      s.baz > 1.5
-    ))
+  real <- select()$span(during(
+    s.foo == 'bar',
+    s.baz > 1.5
+  ))$to_ast()
+  expected <- list(
+    select = list(
+      type = 'during',
+      conds = list(
+        list(
+          op = '==',
+          arg = list(type = 'string', val = 'bar'),
+          type = 'span',
+          path = c('event', 'foo'),
+          stream = list(name = 'S')
+        ),
+        list(
+          op = '>',
+          arg = list(type = 'double', val = 1.5),
+          type = 'span',
+          path = c('event', 'baz'),
+          stream = list(name = 'S')
+        )
+      )
+    )
   )
-  expected <- '{"select":{"type":"during","conds":[{"op":"==","arg":{"type":"string","val":"bar"},"type":"span","path":["event","foo"],"stream":{"name":"S"}},{"op":">","arg":{"type":"double","val":1.5},"type":"span","path":["event","baz"],"stream":{"name":"S"}}]}}'
   expect_equal(real, expected)
 })
 
