@@ -162,7 +162,7 @@ flare_env <- function(expr) {
     # TODO: this probably throws a terrible error msg if the stream is undefined
     val <- eval(as.name(splits[[1]]), find_frame(splits[[1]]))
     if (class(val) == "Stream") {
-      path <- splits[2:length(splits)]
+      path <- splits[-1]
       StreamPath$new(stream = val, path = path)
     } else {
       val
