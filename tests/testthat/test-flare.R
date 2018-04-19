@@ -174,3 +174,37 @@ test_that('stream filters', {
 
   expect_equal(real, expected)
 })
+
+test_that('serial', {
+  s = Stream$new('S')
+  real <- select()$span(s.even == TRUE)$then(s.event == TRUE)$then(s.event.event == TRUE)$to_ast()
+  expected <- list(
+    select = list(
+      type = 'serial',
+      conds = list(
+        list(
+          op = '==',
+          arg = list(type = 'bool', val = TRUE),
+          type = 'span',
+          path = c('event', 'even'),
+          stream = list(name = 'S')
+        ),
+        list(
+          op = '==',
+          arg = list(type = 'bool', val = TRUE),
+          type = 'span',
+          path = c('event', 'event'),
+          stream = list(name = 'S')
+        ),
+        list(
+          op = '==',
+          arg = list(type = 'bool', val = TRUE),
+          type = 'span',
+          path = c('event', 'event', 'event'),
+          stream = list(name = 'S')
+        )
+      )
+    )
+  )
+  expect_equal(real, expected)
+})

@@ -30,15 +30,31 @@ Select <- setRefClass("Select",
       callSuper(query = query)
     },
     span = function(x) {
-      query <<- to_flare(substitute(x))
+      query <<- list(to_flare(substitute(x)))
+      .self
+    },
+    then = function(x) {
+      if (is.null(query)) { stop('Use $span method to start select') }
+      query <<- c(query, list(to_flare(substitute(x))))
       .self
     },
     to_ast = function() {
       if (is.null(query)) {
         list(select = list(expr = TRUE))
+      } else if (length(query) == 1) {
+        list(select = query[[1]]$to_ast())
       } else {
-        list(select = query$to_ast())
+        list(select = Serial$new(query = query)$to_ast())
       }
+    }
+  )
+)
+
+Serial <- setRefClass('Serial',
+  fields = c('query'),
+  methods = list(
+    to_ast = function() {
+      list(type = 'serial', conds = lapply(query, function(q) q$to_ast()))
     }
   )
 )
