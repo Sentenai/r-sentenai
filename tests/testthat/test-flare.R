@@ -16,7 +16,6 @@ test_that('Stream can take filters', {
     list(
       op = '==',
       arg = list(type = 'string', val = 'bar'),
-      type = 'span',
       path = c('event', 'foo')
     )
   )
@@ -151,8 +150,6 @@ test_that('stream filters', {
             filter = list(
               op = '==',
               arg = list(type = 'string', val = 'summer'),
-              # TODO: remove these
-              type = 'span',
               path = c('event', 'season')
             )
           )
@@ -167,8 +164,6 @@ test_that('stream filters', {
             filter = list(
               op = '==',
               arg = list(type = 'string', val = 'summer'),
-              # TODO: remove these
-              type = 'span',
               path = c('event', 'season')
             )
           )

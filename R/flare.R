@@ -55,7 +55,8 @@ Cond <- setRefClass("Cond",
         character = "string"
       )
       c(
-        list(op = op, arg = list(type = t, val = val), type = "span"),
+        list(op = op, arg = list(type = t, val = val)),
+        if (class(path) == 'StreamPath') list(type = 'span') else NULL,
         path$to_ast()
       )
     }
