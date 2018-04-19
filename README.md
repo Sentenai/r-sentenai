@@ -36,4 +36,10 @@
 
 # Current values of all fields in a stream
 > sentenai$values(s)
+
+# Create filtered stream
+> f <- Stream$new("other-stream", V.foo == 'bar' && V.baz > 7)
+
+# Query for spans
+> sentenai$query(select()$span(s.temp > 32 && f.qux == FALSE))$spans()
 ```
