@@ -175,6 +175,38 @@ test_that('stream filters', {
   expect_equal(real, expected)
 })
 
+test_that('or stream filters', {
+  s <- Stream$new('S', V.season == 'summer' || V.season == 'winter')
+  real <- select()$span(s.sunny == TRUE)$to_ast()
+  expected <- list(
+    select = list(
+      op = '==',
+      arg = list(type = 'bool', val = TRUE),
+      type = 'span',
+      path = c('event', 'sunny'),
+      stream = list(
+        name = 'S',
+        filter = list(
+          expr = '||',
+          args = list(
+            list(
+              op = '==',
+              arg = list(type = 'string', val = 'summer'),
+              path = c('event', 'season')
+            ),
+            list(
+              op = '==',
+              arg = list(type = 'string', val = 'winter'),
+              path = c('event', 'season')
+            )
+          )
+        )
+      )
+    )
+  )
+  expect_equal(real, expected)
+})
+
 test_that('serial', {
   s = Stream$new('S')
   real <- select()$span(s.even == TRUE)$then(s.event == TRUE)$then(s.event.event == TRUE)$to_ast()
