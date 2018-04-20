@@ -222,7 +222,6 @@ test_that('serial', {
           stream = list(name = 'S')
         ),
         list(
-          # TODO: should have `within = list(seconds = 0)`
           op = '==',
           arg = list(type = 'bool', val = TRUE),
           type = 'span',
@@ -274,7 +273,6 @@ test_that('all any serial', {
           )
         ),
         list(
-          # TODO: within 0 seconds
           op = '==',
           arg = list(type = 'bool', val = TRUE),
           type = 'span',
