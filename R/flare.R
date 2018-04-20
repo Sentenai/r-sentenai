@@ -40,9 +40,10 @@ Select <- setRefClass("Select",
       ))
       .self
     },
-    then = function(x) {
+    then = function(x, ...) {
       if (is.null(query)) { stop('Use $span method to start select') }
-      query <<- c(query, list(to_flare(substitute(x))))
+      q <- to_flare(substitute(x))
+      query <<- c(query, list(Span$new(q, ...)))
       .self
     },
     to_ast = function() {
@@ -95,6 +96,10 @@ Span <- setRefClass('Span',
         max = max,
         width = exactly
       )
+    },
+    then = function(x, ...) {
+      q <- to_flare(substitute(x))
+      Serial$new(query = list(.self, Span$new(q, ...)))
     },
     to_ast = function() {
       ast <- list(`for` = list())

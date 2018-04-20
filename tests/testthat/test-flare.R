@@ -310,3 +310,49 @@ test_that('relative span', {
   )
   expect_equal(real, expected)
 })
+
+test_that('nested relative spans', {
+  s <- Stream$new('S')
+  real <- select()$span(s.x < 0)$then(
+    span(s.x == 0)$then(s.x > 0, within=delta(seconds = 1)),
+    within = delta(seconds = 2)
+  )$to_ast()
+
+  expected <- list(
+    select = list(
+      type = 'serial',
+      conds = list(
+        list(
+          op = '<',
+          arg = list(type = 'double', val = 0),
+          type = 'span',
+          path = c('event', 'x'),
+          stream = list(name = 'S')
+        ),
+        list(
+          type = 'serial',
+          conds = list(
+            list(
+              op = '==',
+              arg = list(type = 'double', val = 0),
+              type = 'span',
+              path = c('event', 'x'),
+              stream = list(name = 'S')
+            ),
+            list(
+              op = '>',
+              arg = list(type = 'double', val = 0),
+              type = 'span',
+              path = c('event', 'x'),
+              stream = list(name = 'S'),
+              within = list(seconds = 1)
+            )
+          ),
+          within = list(seconds = 2)
+        )
+      )
+    )
+  )
+
+  expect_equal(real, expected)
+})
