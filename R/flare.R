@@ -29,8 +29,15 @@ Select <- setRefClass("Select",
     initialize = function(query = NULL) {
       callSuper(query = query)
     },
-    span = function(x) {
-      query <<- list(to_flare(substitute(x)))
+    span = function(x, ...) {
+      q <- to_flare(substitute(x))
+      kwargs <- list(...)
+
+      query <<- list(Span$new(q,
+        min = kwargs$min,
+        max = kwargs$max,
+        exactly = kwargs$exactly
+      ))
       .self
     },
     then = function(x) {
@@ -46,6 +53,61 @@ Select <- setRefClass("Select",
       } else {
         list(select = Serial$new(query = query)$to_ast())
       }
+    }
+  )
+)
+
+Span <- setRefClass('Span',
+  fields = c('query', 'within', 'after', 'min', 'max', 'width'),
+  methods = list(
+    initialize = function(
+      query,
+      within = NULL,
+      after = NULL,
+      min = NULL,
+      max = NULL,
+      exactly = NULL
+    ) {
+      callSuper(
+        query = query,
+        within = within,
+        after = after,
+        min = min,
+        max = max,
+        width = exactly
+      )
+    },
+    to_ast = function() {
+      ast <- list(`for` = list())
+
+      if(!is.null(within)) {
+        ast$within <- within$to_ast()
+      }
+
+      if(!is.null(after)) {
+        ast$after <- after$to_ast()
+      }
+
+      if(!is.null(min)) {
+        ast$`for`$`at-least` <- min$to_ast()
+      }
+
+      if(!is.null(max)) {
+        ast$`for`$`at-most` <- max$to_ast()
+      }
+
+      if(!is.null(width)) {
+        ast$`for` <- width$to_ast()
+      }
+
+      if (length(ast$`for`) == 0) {
+        ast$`for` = NULL
+      }
+
+      c(
+        ast,
+        query$to_ast()
+      )
     }
   )
 )
@@ -123,6 +185,72 @@ Par <- setRefClass("Par",
         type = type,
         conds = lapply(query, function(q) { q$to_ast() })
       )
+    }
+  )
+)
+
+delta <- function(
+  seconds = 0,
+  minutes = 0,
+  hours = 0,
+  days = 0,
+  weeks = 0,
+  months = 0,
+  years = 0
+) {
+  Delta$new(
+    seconds = seconds,
+    minutes = minutes,
+    hours = hours,
+    days = days,
+    weeks = weeks,
+    months = months,
+    years = years
+  )
+}
+
+Delta <- setRefClass('Delta',
+  fields = list(
+    seconds = 'numeric',
+    minutes = 'numeric',
+    hours = 'numeric',
+    days = 'numeric',
+    weeks = 'numeric',
+    months = 'numeric',
+    years = 'numeric'
+  ),
+  methods = list(
+    initialize = function(
+      seconds = 0,
+      minutes = 0,
+      hours = 0,
+      days = 0,
+      weeks = 0,
+      months = 0,
+      years = 0
+    ) {
+      callSuper(
+        seconds = seconds,
+        minutes = minutes,
+        hours = hours,
+        days = days,
+        weeks = weeks,
+        months = months,
+        years = years
+      )
+    },
+    to_ast = function() {
+      non_zero <- c(
+        if (seconds > 0) list(seconds = seconds) else NULL,
+        if (minutes > 0) list(minutes = minutes) else NULL,
+        if (hours > 0) list(hours = hours) else NULL,
+        if (days > 0) list(days = days) else NULL,
+        if (weeks > 0) list(weeks = weeks) else NULL,
+        if (months > 0) list(months = months) else NULL,
+        if (years > 0) list(years = years) else NULL
+      )
+
+      if (length(non_zero) > 0) non_zero else list(seconds = 0)
     }
   )
 )
