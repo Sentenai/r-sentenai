@@ -19,15 +19,15 @@ Stream <- setRefClass("Stream",
   )
 )
 
-select <- function() {
-  Select$new()
+select <- function(start = NULL, end = NULL) {
+  Select$new(query = NULL, start = start, end = end)
 }
 
-Select <- setRefClass("Select",
-  fields = c("query"),
+Select <- setRefClass('Select',
+  fields = c('query', 'start', 'end'),
   methods = list(
-    initialize = function(query = NULL) {
-      callSuper(query = query)
+    initialize = function(query = NULL, start = NULL, end = NULL) {
+      callSuper(query = query, start = start, end = end)
     },
     span = function(x, ...) {
       q <- to_flare(substitute(x))
@@ -47,13 +47,27 @@ Select <- setRefClass("Select",
       .self
     },
     to_ast = function() {
-      if (is.null(query)) {
-        list(select = list(expr = TRUE))
-      } else if (length(query) == 1) {
-        list(select = query[[1]]$to_ast())
-      } else {
-        list(select = Serial$new(query = query)$to_ast())
+      ast <- list()
+      if (!is.null(start) && !is.null(end)) {
+        ast$between = list(
+          to_iso_8601(start),
+          to_iso_8601(end)
+        )
+      } else if (!is.null(start)) {
+        ast$after = to_iso_8601(start)
+      } else if (!is.null(end)) {
+        ast$before = to_iso_8601(end)
       }
+
+      if (is.null(query)) {
+        ast$select = list(expr = TRUE)
+      } else if (length(query) == 1) {
+        ast$select = query[[1]]$to_ast()
+      } else {
+        ast$select = Serial$new(query = query)$to_ast()
+      }
+
+      ast
     }
   )
 )
