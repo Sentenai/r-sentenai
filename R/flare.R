@@ -57,6 +57,25 @@ Select <- setRefClass("Select",
   )
 )
 
+span <- function(
+  query,
+  within = NULL,
+  after = NULL,
+  min = NULL,
+  max = NULL,
+  exactly = NULL
+) {
+  expr <- to_flare(substitute(query))
+  Span$new(
+    expr,
+    within = within,
+    after = after,
+    min = min,
+    max = max,
+    exactly = exactly
+  )
+}
+
 Span <- setRefClass('Span',
   fields = c('query', 'within', 'after', 'min', 'max', 'width'),
   methods = list(
@@ -105,8 +124,8 @@ Span <- setRefClass('Span',
       }
 
       c(
-        ast,
-        query$to_ast()
+        query$to_ast(),
+        ast
       )
     }
   )

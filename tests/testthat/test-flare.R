@@ -273,3 +273,40 @@ test_that('all any serial', {
   )
   expect_equal(real, expected)
 })
+
+test_that('relative span', {
+  s <- Stream$new('s')
+  t <- Stream$new('t')
+
+  real <- select()$span(
+    span(s.x == TRUE, min=delta(years=1, months=1)) || span(t.x == TRUE, after=delta(minutes=11), within=delta(seconds=13))
+    , max=delta(weeks=1)
+  )$to_ast()
+
+  expected <- list(
+    select = list(
+      expr = '||',
+      args = list(
+        list(
+          op = '==',
+          arg = list(type = 'bool', val = TRUE),
+          type = 'span',
+          path = c('event', 'x'),
+          stream = list(name = 's'),
+          `for` = list(`at-least` = list(months = 1, years = 1))
+        ),
+        list(
+          op = '==',
+          arg = list(type = 'bool', val = TRUE),
+          type = 'span',
+          path = c('event', 'x'),
+          stream = list(name = 't'),
+          within = list(seconds = 13),
+          after = list(minutes = 11)
+        )
+      ),
+      `for` = list(`at-most` = list(weeks = 1))
+    )
+  )
+  expect_equal(real, expected)
+})
