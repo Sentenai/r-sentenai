@@ -297,10 +297,10 @@ Switch <- setRefClass('Switch',
   fields = c('stream', 'left', 'right'),
   methods = list(
     to_ast = function() {
+      if (is.null(stream)) { stop('Switch must be bound to a Stream') }
       list(
         type = 'switch',
-        # TODO:
-        # stream = stream$to_ast(),
+        stream = stream$to_ast(),
         conds = list(
           if (isTRUE(left)) list(expr = TRUE) else left$to_ast(),
           if (isTRUE(right)) list(expr = TRUE) else right$to_ast()
@@ -357,6 +357,15 @@ f_env$"during" <- function(...) {
   Par$new(type = "during", query = list(...))
 }
 
+f_env$':' <- function(stream, switch) {
+  if (class(stream) == 'Stream' && class(switch) == 'Switch') {
+    switch$stream <- stream
+    switch
+  } else {
+    stop('Expected `:` to connect a Stream and a Switch')
+  }
+}
+
 to_flare <- function(expr) {
   eval(expr, flare_env(expr))
 }
@@ -371,9 +380,8 @@ flare_env <- function(expr) {
       EventPath$new(path = path[-1])
     } else {
       val <- eval(as.name(path[[1]]), find_frame(path[[1]]))
-      if (class(val) == "Stream") {
-        path <- path[-1]
-        StreamPath$new(stream = val, path = path)
+      if (class(val) == 'Stream' && length(path[-1]) > 0) {
+        StreamPath$new(stream = val, path = path[-1])
       } else {
         val
       }

@@ -207,6 +207,30 @@ test_that('or stream filters', {
   expect_equal(real, expected)
 })
 
+test_that('switches', {
+  s <- Stream$new('S')
+  real <- select()$span(s:(V.x < 0 -> V.x > 0))$to_ast()
+  expected <- list(
+    select = list(
+      type = 'switch',
+      stream = list(name = 'S'),
+      conds = list(
+        list(
+          op = '<',
+          arg = list(type = 'double', val = 0),
+          path = c('event', 'x')
+        ),
+        list(
+          op = '>',
+          arg = list(type = 'double', val = 0),
+          path = c('event', 'x')
+        )
+      )
+    )
+  )
+  expect_equal(real, expected)
+})
+
 test_that('serial', {
   s = Stream$new('S')
   real <- select()$span(s.even == TRUE)$then(s.event == TRUE)$then(s.event.event == TRUE)$to_ast()
