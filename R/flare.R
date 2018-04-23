@@ -293,6 +293,23 @@ Delta <- setRefClass('Delta',
   )
 )
 
+Switch <- setRefClass('Switch',
+  fields = c('stream', 'left', 'right'),
+  methods = list(
+    to_ast = function() {
+      list(
+        type = 'switch',
+        # TODO:
+        # stream = stream$to_ast(),
+        conds = list(
+          if (isTRUE(left)) list(expr = TRUE) else left$to_ast(),
+          if (isTRUE(right)) list(expr = TRUE) else right$to_ast()
+        )
+      )
+    }
+  )
+)
+
 make_cond <- function (op) {
   force(op)
   function (path, val) {
@@ -320,6 +337,14 @@ f_env$"||" <- function (left, right) {
   force(left)
   force(right)
   Or$new(left = left, right = right)
+}
+
+# implementing `->` which gets parsed as `<-`
+# so left/right are flipped
+f_env$"<-" <- function (right, left) {
+  force(right)
+  force(left)
+  Switch$new(stream = NULL, left = left, right = right)
 }
 
 f_env$"any_of" <- function(...) {
