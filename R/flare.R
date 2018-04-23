@@ -366,13 +366,17 @@ to_flare <- function(expr) {
 flare_env <- function(expr) {
   symbol_list <- as.list(all_names(expr))
   stream_paths <- lapply(symbol_list, function(sym) {
-    splits <- strsplit(sym, "\\.")[[1]]
-    val <- eval(as.name(splits[[1]]), find_frame(splits[[1]]))
-    if (class(val) == "Stream") {
-      path <- splits[-1]
-      StreamPath$new(stream = val, path = path)
+    path <- strsplit(sym, "\\.")[[1]]
+    if (path[[1]] == 'V') {
+      EventPath$new(path = path[-1])
     } else {
-      val
+      val <- eval(as.name(path[[1]]), find_frame(path[[1]]))
+      if (class(val) == "Stream") {
+        path <- path[-1]
+        StreamPath$new(stream = val, path = path)
+      } else {
+        val
+      }
     }
   })
   stream_env <- list2env(setNames(stream_paths, symbol_list))
