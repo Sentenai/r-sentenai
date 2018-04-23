@@ -251,6 +251,26 @@ test_that('unary switch', {
   expect_equal(real, expected)
 })
 
+test_that('unary switch to anything', {
+  s <- Stream$new('S')
+  real <- select()$span(s:(V.x < 0 -> TRUE))$to_ast()
+  expected <- list(
+    select = list(
+      type = 'switch',
+      stream = list(name = 'S'),
+      conds = list(
+        list(
+          op = '<',
+          arg = list(type = 'double', val = 0),
+          path = c('event', 'x')
+        ),
+        list(expr = TRUE)
+      )
+    )
+  )
+  expect_equal(real, expected)
+})
+
 test_that('serial', {
   s = Stream$new('S')
   real <- select()$span(s.even == TRUE)$then(s.event == TRUE)$then(s.event.event == TRUE)$to_ast()
