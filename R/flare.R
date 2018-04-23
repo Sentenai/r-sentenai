@@ -24,8 +24,7 @@ Stream <- setRefClass("Stream",
 #' @param start A POSIXlt date.
 #' @param end A POSIXlt date.
 #' @return An instance of Select bound to start/end.
-#' @examples
-#' select()$span(stream.field == TRUE)
+#' @export
 select <- function(start = NULL, end = NULL) {
   Select$new(query = NULL, start = start, end = end)
 }

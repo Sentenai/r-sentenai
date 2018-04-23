@@ -17,6 +17,3 @@ An instance of Select bound to start/end.
 \description{
 Initiate a select statement
 }
-\examples{
-select()$span(stream.field == TRUE)
-}
