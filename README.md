@@ -1,5 +1,7 @@
 # r-sentenai
 
+[![Build Status](https://travis-ci.org/Sentenai/r-sentenai.svg?branch=master)](https://travis-ci.org/Sentenai/r-sentenai)
+
 > R client library for [Sentenai](http://sentenai.com/)
 
 ## Installation
