@@ -11,6 +11,11 @@
 #   Check Package:             'Cmd + Shift + E'
 #   Test Package:              'Cmd + Shift + T'
 
+#' Sentenai API client.
+#'
+#' @field auth_key Valid API authentication key.
+#' @field host (optional) Defaults to https://api.sentenai.com
+#' @export
 Sentenai <- setRefClass("Sentenai",
   fields = list(auth_key = "character", host = "character"),
   methods = list(

@@ -2,14 +2,14 @@ context('test-flare.R')
 
 test_that('Stream takes a name', {
   name <- 'boston-weather'
-  s <- Stream$new(name)
+  s <- stream(name)
   expect_equal(s$name, name)
   expect_equal(s$filter, NULL)
 })
 
 test_that('Stream can take filters', {
   name <- 'boston-weather'
-  s <- Stream$new(name, V.foo == 'bar')
+  s <- stream(name, V.foo == 'bar')
   expect_equal(s$name, name)
   expect_equal(
     s$filter$to_ast(),
@@ -22,7 +22,7 @@ test_that('Stream can take filters', {
 })
 
 test_that('Basic select', {
-  s <- Stream$new(name = 'S')
+  s <- stream(name = 'S')
   real <- select()$span(s.key == 'something')$to_ast()
   expected <- list(
     select = list(
@@ -37,8 +37,8 @@ test_that('Basic select', {
 })
 
 test_that('Or', {
-  s <- Stream$new(name = 'S')
-  t <- Stream$new(name = 'T')
+  s <- stream(name = 'S')
+  t <- stream(name = 'T')
   real <- select()$span(s.x == TRUE || t.x == TRUE)$to_ast()
   expected <- list(
     select = list(
@@ -65,7 +65,7 @@ test_that('Or', {
 })
 
 test_that('any_of', {
-  s <- Stream$new(name = 'moose')
+  s <- stream(name = 'moose')
   real <- select()$span(any_of(
     s.x < 0,
     s.x >= 3.141592653589793,
@@ -103,7 +103,7 @@ test_that('any_of', {
 })
 
 test_that('during', {
-  s <- Stream$new(name = 'S')
+  s <- stream(name = 'S')
   real <- select()$span(during(
     s.foo == 'bar',
     s.baz > 1.5
@@ -133,7 +133,7 @@ test_that('during', {
 })
 
 test_that('stream filters', {
-  s = Stream$new('S', V.season == 'summer')
+  s = stream('S', V.season == 'summer')
   temp <- 77
   real <- select()$span(s.temperature >= temp && s.sunny == TRUE)$to_ast()
   expected <- list(
@@ -176,7 +176,7 @@ test_that('stream filters', {
 })
 
 test_that('or stream filters', {
-  s <- Stream$new('S', V.season == 'summer' || V.season == 'winter')
+  s <- stream('S', V.season == 'summer' || V.season == 'winter')
   real <- select()$span(s.sunny == TRUE)$to_ast()
   expected <- list(
     select = list(
@@ -208,7 +208,7 @@ test_that('or stream filters', {
 })
 
 test_that('switches', {
-  s <- Stream$new('S')
+  s <- stream('S')
   real <- select()$span(s:(V.x < 0 -> V.x > 0))$to_ast()
   expected <- list(
     select = list(
@@ -232,7 +232,7 @@ test_that('switches', {
 })
 
 test_that('unary switch', {
-  s <- Stream$new('S')
+  s <- stream('S')
   real <- select()$span(s:(TRUE -> V.x < 0))$to_ast()
   expected <- list(
     select = list(
@@ -252,7 +252,7 @@ test_that('unary switch', {
 })
 
 test_that('unary switch to anything', {
-  s <- Stream$new('S')
+  s <- stream('S')
   real <- select()$span(s:(V.x < 0 -> TRUE))$to_ast()
   expected <- list(
     select = list(
@@ -272,7 +272,7 @@ test_that('unary switch to anything', {
 })
 
 test_that('serial', {
-  s = Stream$new('S')
+  s = stream('S')
   real <- select()$span(s.even == TRUE)$then(s.event == TRUE)$then(s.event.event == TRUE)$to_ast()
   expected <- list(
     select = list(
@@ -306,11 +306,11 @@ test_that('serial', {
 })
 
 test_that('all any serial', {
-  foo <- Stream$new('foo')
-  bar <- Stream$new('bar')
-  baz <- Stream$new('baz')
-  qux <- Stream$new('qux')
-  quux <- Stream$new('quux')
+  foo <- stream('foo')
+  bar <- stream('bar')
+  baz <- stream('baz')
+  qux <- stream('qux')
+  quux <- stream('quux')
 
   real <- select()$span(any_of(foo.x == TRUE, bar.y == TRUE))$then(baz.z == TRUE)$then(all_of(qux.α == TRUE, quux.β == TRUE))$to_ast()
   expected = list(
@@ -369,8 +369,8 @@ test_that('all any serial', {
 })
 
 test_that('relative span', {
-  s <- Stream$new('s')
-  t <- Stream$new('t')
+  s <- stream('s')
+  t <- stream('t')
 
   real <- select()$span(
     span(s.x == TRUE, min=delta(years=1, months=1)) || span(t.x == TRUE, after=delta(minutes=11), within=delta(seconds=13))
@@ -406,7 +406,7 @@ test_that('relative span', {
 })
 
 test_that('nested relative spans', {
-  s <- Stream$new('S')
+  s <- stream('S')
   real <- select()$span(s.x < 0)$then(
     span(s.x == 0)$then(s.x > 0, within=delta(seconds = 1)),
     within = delta(seconds = 2)

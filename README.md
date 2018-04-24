@@ -25,7 +25,7 @@
 > library(sentenai)
 > library(httr)
 > sentenai <- Sentenai$new("<auth_key>")
-> s <- Stream$new("my-stream-name")
+> s <- stream("my-stream-name")
 
 # Get stats about stream
 > sentenai$get(s)
@@ -40,7 +40,7 @@
 > sentenai$values(s)
 
 # Create filtered stream
-> f <- Stream$new("other-stream", V.foo == 'bar' && V.baz > 7)
+> f <- stream("other-stream", V.foo == 'bar' && V.baz > 7)
 
 # Query for spans
 > sentenai$query(select()$span(s.temp > 32 && f.qux == FALSE))$spans()

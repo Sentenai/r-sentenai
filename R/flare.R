@@ -1,14 +1,21 @@
+#' Create a Stream instance
+#'
+#' @param name Name of the Sentenai stream.
+#' @param filter Conditions applied to the raw stream.
+#' @return An instance of Stream.
+#' @export
+stream <- function(name, filter = NULL) {
+  expr <- substitute(filter)
+  if (is.null(expr)) {
+    Stream$new(name = name, filter = NULL)
+  } else {
+    Stream$new(name = name, filter = to_stream_filters(expr))
+  }
+}
+
 Stream <- setRefClass("Stream",
   fields = c("name", "filter"),
   methods = list(
-    initialize = function(name, filter = NULL) {
-      expr <- substitute(filter)
-      if (is.null(expr)) {
-        callSuper(name = name, filter = filter)
-      } else {
-        callSuper(name = name, filter = to_stream_filters(expr))
-      }
-    },
     to_ast = function() {
       if (is.null(filter)) {
         list(name = name)
@@ -78,6 +85,17 @@ Select <- setRefClass('Select',
   )
 )
 
+#' Create a Span instance to restrict conditions
+#' based on within/after/min/max/exactly.
+#' @param min The minimum valid span duration `delta()`.
+#' @param max The maximum valid span duration `delta()`.
+#' @param exactly The exact valid span duration `delta()`.
+#' @param within The maximum distance in time between the end of the previous
+#'               span and the start of this span.
+#' @param after The minimum distance in time between the end of the previous
+#'              span and the start of this span.
+#' @return An instance of Delta.
+#' @export
 span <- function(
   query,
   within = NULL,
@@ -233,6 +251,10 @@ Par <- setRefClass("Par",
   )
 )
 
+#' Create a Delta instance representing a time delta.
+#'
+#' @return An instance of Delta.
+#' @export
 delta <- function(
   seconds = 0,
   minutes = 0,
