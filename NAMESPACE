@@ -2,6 +2,6 @@
 
 export(delta)
 export(select)
+export(sentenaiWithKey)
 export(span)
 export(stream)
-exportClasses(Sentenai)

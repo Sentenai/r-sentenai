@@ -24,7 +24,7 @@
 ```R
 > library(sentenai)
 > library(httr)
-> sentenai <- Sentenai$new("<auth_key>")
+> sentenai <- sentenaiWithKey("<auth_key>")
 > s <- stream("my-stream-name")
 
 # Get stats about stream

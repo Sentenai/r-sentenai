@@ -11,17 +11,18 @@
 #   Check Package:             'Cmd + Shift + E'
 #   Test Package:              'Cmd + Shift + T'
 
-#' Sentenai API client.
+#' Create Sentenai API client.
 #'
-#' @field auth_key Valid API authentication key.
-#' @field host (optional) Defaults to https://api.sentenai.com
+#' @param auth_key Valid API authentication key.
+#' @param host (optional) Defaults to https://api.sentenai.com
 #' @export
+sentenaiWithKey <- function(auth_key, host = 'https://api.sentenai.com') {
+  Sentenai$new(auth_key = auth_key, host = host)
+}
+
 Sentenai <- setRefClass("Sentenai",
   fields = list(auth_key = "character", host = "character"),
   methods = list(
-    initialize = function(auth_key = '', host = 'https://api.sentenai.com') {
-      callSuper(auth_key = auth_key, host = host)
-    },
     get = function(stream, event_id=NULL) {
       parts = c(host, 'streams', stream$name)
       if (!is.null(event_id)) {
