@@ -42,14 +42,13 @@ Select <- setRefClass('Select',
     initialize = function(query = NULL, start = NULL, end = NULL) {
       callSuper(query = query, start = start, end = end)
     },
-    span = function(x, ...) {
+    span = function(x, min = NULL, max = NULL, exactly = NULL) {
       q <- to_flare(substitute(x))
-      kwargs <- list(...)
 
       query <<- list(Span$new(q,
-        min = kwargs$min,
-        max = kwargs$max,
-        exactly = kwargs$exactly
+        min = min,
+        max = max,
+        exactly = exactly
       ))
       .self
     },
