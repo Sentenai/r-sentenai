@@ -207,6 +207,34 @@ test_that('or stream filters', {
   expect_equal(real, expected)
 })
 
+test_that('returning', {
+  s <- stream('weather')
+  real <- select()$span(returning = from(s, list(value = V.maxTemp, other = list(constant = 3))))$to_ast()
+  print(rjson::toJSON(real))
+  expected <- list(
+    select = list(expr = TRUE),
+    projections = list(
+      explicit = list(
+        list(
+          stream = list(name = 'weather'),
+          projection = list(
+            value = list(
+              list(var = c('event', 'maxTemp'))
+            ),
+            other = list(
+              constant = list(
+                list(lit = list(val = 3, type = 'double'))
+              )
+            )
+          )
+        )
+      ),
+      ... = TRUE
+    )
+  )
+  expect_equal(real, expected)
+})
+
 test_that('switches', {
   s <- stream('S')
   real <- select()$span(s:(V.x < 0 -> V.x > 0))$to_ast()

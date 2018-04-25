@@ -33,17 +33,16 @@ Stream <- setRefClass("Stream",
 #' @return An instance of Select bound to start/end.
 #' @export
 select <- function(start = NULL, end = NULL) {
-  Select$new(query = NULL, start = start, end = end)
+  Select$new(query = NULL, start = start, end = end, projection = NULL)
 }
 
 Select <- setRefClass('Select',
-  fields = c('query', 'start', 'end'),
+  fields = c('query', 'start', 'end', 'projection'),
   methods = list(
-    initialize = function(query = NULL, start = NULL, end = NULL) {
-      callSuper(query = query, start = start, end = end)
-    },
-    span = function(x, min = NULL, max = NULL, exactly = NULL) {
+    span = function(x = NULL, min = NULL, max = NULL, exactly = NULL, returning = NULL) {
       q <- to_flare(substitute(x))
+      raw_proj <- to_flare(substitute(returning), proj_env)
+      projection <<- if (is.null(raw_proj) || is.list(raw_proj)) raw_proj else list(raw_proj)
 
       query <<- list(Span$new(q,
         min = min,
@@ -77,6 +76,14 @@ Select <- setRefClass('Select',
         ast$select = query[[1]]$to_ast()
       } else {
         ast$select = Serial$new(query = query)$to_ast()
+      }
+
+      if (!is.null(projection)) {
+        ast$projections <- list(
+          explicit = lapply(projection, function(p) p$to_ast()),
+          # TODO: should be able to set `default`
+          ... = TRUE
+        )
       }
 
       ast
@@ -166,7 +173,7 @@ Span <- setRefClass('Span',
       }
 
       c(
-        query$to_ast(),
+        if (is.null(query)) list(expr = TRUE) else query$to_ast(),
         ast
       )
     }
@@ -393,13 +400,72 @@ f_env$':' <- function(stream, switch) {
   }
 }
 
-to_flare <- function(expr) {
-  eval(expr, flare_env(expr))
+ProjMath <- setRefClass('ProjMath',
+  fields = c('op', 'left', 'right')
+)
+
+StreamProjection <- setRefClass('StreamProjection',
+  fields = c('stream', 'proj'),
+  methods = list(
+    to_ast = function() {
+      if (is.logical(proj)) {
+        p <- if (isTRUE(proj)) 'default' else FALSE
+        list(stream = stream$to_ast(), projection = p)
+      } else {
+        go <- function (proj) {
+          Reduce(
+            function(out, name) {
+              ast <- switch(
+                class(proj[[name]]),
+                  # TODO: ProjMath
+                  EventPath = list(list(var = proj[[name]]$to_ast()$path)),
+                  list = go(proj[[name]]),
+                  numeric = list(list(lit = list(val = proj[[name]], type = 'double'))),
+                  logical = list(list(lit = list(val = proj[[name]], type = 'bool'))),
+                  character = list(list(lit = list(val = proj[[name]], type = 'string'))),
+                  stop(sprintf('%s is unsupported in projections', class(proj[[name]])))
+              )
+              out[[name]] <- ast
+              out
+            },
+            names(proj),
+            list()
+          )
+        }
+
+        list(stream = stream$to_ast(), projection = go(proj))
+      }
+    }
+  )
+)
+
+proj_env <- new.env(parent = emptyenv())
+proj_env$'+' <- function(left, right) {
+  ProjMath$new('+', left, right)
+}
+proj_env$'-' <- function(left, right) {
+  ProjMath$new('-', left, right)
+}
+proj_env$'*' <- function(left, right) {
+  ProjMath$new('*', left, right)
+}
+proj_env$'/' <- function(left, right) {
+  ProjMath$new('/', left, right)
+}
+proj_env$'/' <- function(left, right) {
+  ProjMath$new('/', left, right)
+}
+proj_env$'from' <- function(stream, proj) {
+  StreamProjection$new(stream = stream, proj = proj)
+}
+
+to_flare <- function(expr, base_env = f_env) {
+  eval(expr, flare_env(expr, base_env))
 }
 
 # given an expression, produce an env with every
 # name referencing a StreamPath.
-flare_env <- function(expr) {
+flare_env <- function(expr, base_env) {
   symbol_list <- as.list(all_names(expr))
   stream_paths <- lapply(symbol_list, function(sym) {
     path <- strsplit(sym, "\\.")[[1]]
@@ -416,7 +482,7 @@ flare_env <- function(expr) {
   })
   stream_env <- list2env(setNames(stream_paths, symbol_list))
 
-  clone_env(f_env, parent = stream_env)
+  clone_env(base_env, parent = stream_env)
 }
 
 to_stream_filters <- function(expr) {
