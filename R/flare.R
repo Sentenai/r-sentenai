@@ -427,14 +427,14 @@ StreamProjection <- setRefClass('StreamProjection',
         p <- if (isTRUE(proj)) 'default' else FALSE
         list(stream = stream$to_ast(), projection = p)
       } else {
-        go <- function (proj) {
+        proj_ast <- function (proj) {
           Reduce(
             function(out, name) {
               ast <- switch(
                 class(proj[[name]]),
                   ProjMath = list(proj[[name]]$to_ast()),
                   EventPath = list(list(var = proj[[name]]$to_ast()$path)),
-                  list = go(proj[[name]]),
+                  list = proj_ast(proj[[name]]),
                   numeric = list(list(lit = list(val = proj[[name]], type = 'double'))),
                   logical = list(list(lit = list(val = proj[[name]], type = 'bool'))),
                   character = list(list(lit = list(val = proj[[name]], type = 'string'))),
@@ -448,7 +448,7 @@ StreamProjection <- setRefClass('StreamProjection',
           )
         }
 
-        list(stream = stream$to_ast(), projection = go(proj))
+        list(stream = stream$to_ast(), projection = proj_ast(proj))
       }
     }
   )
