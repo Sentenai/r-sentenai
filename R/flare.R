@@ -401,7 +401,22 @@ f_env$':' <- function(stream, switch) {
 }
 
 ProjMath <- setRefClass('ProjMath',
-  fields = c('op', 'left', 'right')
+  fields = c('op', 'left', 'right'),
+  methods = list(
+    to_ast = function() {
+      convert <- function(p) {
+        switch(
+          class(p),
+            numeric = list(lit = list(val = p, type = 'double')),
+            EventPath = list(var = p$to_ast()$path),
+            ProjMath = p$to_ast(),
+            stop('Projection math with non-numeric types is unsupported.')
+        )
+      }
+
+      list(op = op, lhs = convert(left), rhs = convert(right))
+    }
+  )
 )
 
 StreamProjection <- setRefClass('StreamProjection',
@@ -417,7 +432,7 @@ StreamProjection <- setRefClass('StreamProjection',
             function(out, name) {
               ast <- switch(
                 class(proj[[name]]),
-                  # TODO: ProjMath
+                  ProjMath = list(proj[[name]]$to_ast()),
                   EventPath = list(list(var = proj[[name]]$to_ast()$path)),
                   list = go(proj[[name]]),
                   numeric = list(list(lit = list(val = proj[[name]], type = 'double'))),
@@ -441,19 +456,19 @@ StreamProjection <- setRefClass('StreamProjection',
 
 proj_env <- new.env(parent = emptyenv())
 proj_env$'+' <- function(left, right) {
-  ProjMath$new('+', left, right)
+  ProjMath$new(op = '+', left = left, right = right)
 }
 proj_env$'-' <- function(left, right) {
-  ProjMath$new('-', left, right)
+  ProjMath$new(op = '-', left = left, right = right)
 }
 proj_env$'*' <- function(left, right) {
-  ProjMath$new('*', left, right)
+  ProjMath$new(op = '*', left = left, right = right)
 }
 proj_env$'/' <- function(left, right) {
-  ProjMath$new('/', left, right)
+  ProjMath$new(op = '/', left = left, right = right)
 }
 proj_env$'/' <- function(left, right) {
-  ProjMath$new('/', left, right)
+  ProjMath$new(op = '/', left = left, right = right)
 }
 proj_env$'from' <- function(stream, proj) {
   StreamProjection$new(stream = stream, proj = proj)
