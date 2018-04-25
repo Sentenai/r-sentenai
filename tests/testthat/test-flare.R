@@ -210,7 +210,6 @@ test_that('or stream filters', {
 test_that('returning', {
   s <- stream('weather')
   real <- select()$span(returning = from(s, list(value = V.maxTemp, other = list(constant = 3))))$to_ast()
-  print(rjson::toJSON(real))
   expected <- list(
     select = list(expr = TRUE),
     projections = list(
@@ -225,6 +224,53 @@ test_that('returning', {
               constant = list(
                 list(lit = list(val = 3, type = 'double'))
               )
+            )
+          )
+        )
+      ),
+      ... = TRUE
+    )
+  )
+  expect_equal(real, expected)
+})
+
+test_that('realistic returning', {
+  weather <- stream('weather')
+  real <- select()$span(
+    returning = from(weather, list(
+      air = V.air_temp,
+      air_unit = 'F',
+      hum = V.humidity,
+      hum_unit = '%',
+      co2 = V.co2,
+      co2_unit = 'ppm'
+    ))
+  )$to_ast()
+
+  expected <- list(
+    select = list(expr = TRUE),
+    projections = list(
+      explicit = list(
+        list(
+          stream = list(name = 'weather'),
+          projection = list(
+            air = list(
+              list(var = c('event', 'air_temp'))
+            ),
+            air_unit = list(
+              list(lit = list(val = 'F', type = 'string'))
+            ),
+            hum = list(
+              list(var = c('event', 'humidity'))
+            ),
+            hum_unit = list(
+              list(lit = list(val = '%', type = 'string'))
+            ),
+            co2 = list(
+              list(var = c('event', 'co2'))
+            ),
+            co2_unit = list(
+              list(lit = list(val = 'ppm', type = 'string'))
             )
           )
         )
