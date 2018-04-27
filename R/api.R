@@ -161,10 +161,10 @@ Cursor <- setRefClass("Cursor",
         to_iso_8601(start),
         to_iso_8601(end)
       )
-      url <- sprintf("%s/query/%s/events", client$host, cursor)
       events <- list()
 
       while(!is.null(cursor)) {
+        url <- sprintf("%s/query/%s/events", client$host, cursor)
         r <- GET(url, client$get_api_headers())
         code <- status_code(r)
 
