@@ -281,6 +281,57 @@ test_that('realistic returning', {
   expect_equal(real, expected)
 })
 
+test_that('returning op', {
+  weather <- stream('weather')
+  real <- select()$span(
+    returning = from(weather, list(
+      air = 5 / 9 * (V.air_temp - 32),
+      air_unit = 'C'
+    ))
+  )$to_ast()
+
+  expected <- list(
+    select = list(expr = TRUE),
+    projections = list(
+      explicit = list(
+        list(
+          stream = list(name = 'weather'),
+          projection = list(
+            air = list(
+              list(
+                op = '*',
+                lhs = list(
+                  op = '/',
+                  lhs = list(
+                    lit = list(val = 5, type = 'double')
+                  ),
+                  rhs = list(
+                    lit = list(val = 9, type = 'double')
+                  )
+                ),
+                rhs = list(
+                  op = '-',
+                  lhs = list(
+                    var = c('event', 'air_temp')
+                  ),
+                  rhs = list(
+                    lit = list(val = 32, type = 'double')
+                  )
+                )
+              )
+            ),
+            air_unit = list(
+              list(lit = list(val = 'C', type = 'string'))
+            )
+          )
+        )
+      ),
+      ... = TRUE
+    )
+  )
+  expect_equal(real, expected)
+})
+
 test_that('switches', {
   s <- stream('S')
   real <- select()$span(s:(V.x < 0 -> V.x > 0))$to_ast()
