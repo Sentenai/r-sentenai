@@ -29,8 +29,8 @@ Sentenai <- setRefClass("Sentenai",
         parts <- c(parts, 'events', event_id)
       }
       url <- paste(parts, collapse = '/')
-      res <- GET(url, get_api_headers())
-      content(res)
+      res <- httr::GET(url, get_api_headers())
+      httr::content(res)
     },
     field_stats = function(stream, field, start = NULL, end = NULL) {
       args = list()
@@ -41,14 +41,14 @@ Sentenai <- setRefClass("Sentenai",
         args <- c(args, list(end = to_iso_8601(end)))
       }
       url <- paste(c(host, 'streams', stream$name, 'fields', field, 'stats'), collapse = '/')
-      res <- GET(url, get_api_headers(), query = args)
-      content(res)
+      res <- httr::GET(url, get_api_headers(), query = args)
+      httr::content(res)
     },
     # TODO: filter by meta
     streams = function(name=NULL) {
       url <- paste(c(host, 'streams'), collapse = '/')
-      res <- GET(url, get_api_headers())
-      streams <- content(res)
+      res <- httr::GET(url, get_api_headers())
+      streams <- httr::content(res)
       if (is.null(name)) {
         streams
       } else {
@@ -61,9 +61,9 @@ Sentenai <- setRefClass("Sentenai",
         c(host, 'streams', stream$name, 'start', to_iso_8601(start), 'end', to_iso_8601(end)),
         collapse = '/'
       )
-      res <- GET(url, get_api_headers())
-      lines <- strsplit(content(res, as = "text", encoding = "UTF-8"), "\n")[[1]]
-      lapply(lines, function(line) { fromJSON(line) })
+      res <- httr::GET(url, get_api_headers())
+      lines <- strsplit(httr::content(res, as = "text", encoding = "UTF-8"), "\n")[[1]]
+      lapply(lines, function(line) { rjson::fromJSON(line) })
     },
     query = function(statements, limit = Inf) {
       Cursor$new(
@@ -74,32 +74,32 @@ Sentenai <- setRefClass("Sentenai",
     },
     fields = function(stream) {
       url <- paste(c(host, 'streams', stream$name, 'fields'), collapse = '/')
-      res <- GET(url, get_api_headers())
-      content(res)
+      res <- httr::GET(url, get_api_headers())
+      httr::content(res)
     },
     values = function(stream, timestamp = NULL) {
       headers = list()
       args = list()
       if (!is.null(timestamp)) {
-        headers = add_headers(timestamp = to_iso_8601(timestamp))
+        headers = httr::add_headers(timestamp = to_iso_8601(timestamp))
         args = list(at = to_iso_8601(timestamp))
       }
       url <- paste(c(host, 'streams', stream$name, 'values'), collapse = '/')
-      res <- GET(url, c(get_api_headers(), headers), body = args)
-      content(res)
+      res <- httr::GET(url, c(get_api_headers(), headers), body = args)
+      httr::content(res)
     },
     newest = function(stream) {
       url <- paste(c(host, 'streams', stream$name, 'newest'), collapse = '/')
-      res <- GET(url, get_api_headers())
-      content(res)
+      res <- httr::GET(url, get_api_headers())
+      httr::content(res)
     },
     oldest = function(stream) {
       url <- paste(c(host, 'streams', stream$name, 'oldest'), collapse = '/')
-      res <- GET(url, get_api_headers())
-      content(res)
+      res <- httr::GET(url, get_api_headers())
+      httr::content(res)
     },
     get_api_headers = function() {
-      add_headers('Content-Type' = 'application/json', 'Auth-Key' = auth_key)
+      httr::add_headers('Content-Type' = 'application/json', 'Auth-Key' = auth_key)
     }
   )
 )
@@ -118,13 +118,13 @@ Cursor <- setRefClass("Cursor",
     # TODO: can this happen in a constructor? look into $initialize
     get = function () {
       url <- sprintf("%s/query", client$host)
-      r <- POST(url, client$get_api_headers(), body = query, encode = "json")
-      if (status_code(r) == 201) {
-        query_id <<- headers(r)$location
+      r <- httr::POST(url, client$get_api_headers(), body = query, encode = "json")
+      if (httr::status_code(r) == 201) {
+        query_id <<- httr::headers(r)$location
         .self
       } else {
         print("TODO: handle errors")
-        print(status_code(r))
+        print(httr::status_code(r))
       }
     },
     spans = function () {
@@ -138,7 +138,7 @@ Cursor <- setRefClass("Cursor",
           url <- sprintf("%s/query/%s/spans", client$host, cid)
         }
 
-        r <- content(GET(url, client$get_api_headers()))
+        r <- httr::content(httr::GET(url, client$get_api_headers()))
 
         # TODO: hold onto `spans` reference
         spans <- c(spans, r$spans)
@@ -165,8 +165,8 @@ Cursor <- setRefClass("Cursor",
 
       while(!is.null(cursor)) {
         url <- sprintf("%s/query/%s/events", client$host, cursor)
-        r <- GET(url, client$get_api_headers())
-        code <- status_code(r)
+        r <- httr::GET(url, client$get_api_headers())
+        code <- httr::status_code(r)
 
         if (code == 400) {
           stop(sprintf("Client error in request for cursor: %s", cursor))
@@ -176,13 +176,13 @@ Cursor <- setRefClass("Cursor",
           retries <- retries + 1
         } else {
           # TODO: process this all, not sure how to mimic python lib
-          cont <- content(r)
+          cont <- httr::content(r)
           # has info about which streams were queries
           # print(cont[[1]])
           # has actual events
           # print(length(cont[[2]]))
 
-          cursor <- headers(r)$cursor
+          cursor <- httr::headers(r)$cursor
           events <- c(events, cont[[2]])
         }
       }
@@ -190,17 +190,17 @@ Cursor <- setRefClass("Cursor",
       events
     },
     dataframe = function (sp = spans()) {
-      c1 <- makeCluster(detectCores() - 1)
+      c1 <- parallel::makeCluster(parallel::detectCores() - 1)
 
       # this feels fragile
-      clusterExport(c1, "to_iso_8601")
-      clusterEvalQ(c1, library(httr))
+      parallel::clusterExport(c1, "to_iso_8601")
+      parallel::clusterEvalQ(c1, library(httr))
 
-      df <- parLapply(c1, sp, function(span) {
+      df <- parallel::parLapply(c1, sp, function(span) {
         .slice(query_id, span$start, span$end)
       })
 
-      stopCluster(c1)
+      parallel::stopCluster(c1)
       df
     },
     stats = function (sp = spans()) {

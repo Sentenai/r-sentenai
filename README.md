@@ -23,7 +23,6 @@
 
 ```R
 > library(sentenai)
-> library(httr)
 > sentenai <- sentenaiWithKey("<auth_key>")
 > s <- stream("my-stream-name")
 
