@@ -228,7 +228,7 @@ test_that('returning', {
           )
         )
       ),
-      ... = TRUE
+      ... = FALSE
     )
   )
   expect_equal(real, expected)
@@ -275,7 +275,7 @@ test_that('realistic returning', {
           )
         )
       ),
-      ... = TRUE
+      ... = FALSE
     )
   )
   expect_equal(real, expected)
@@ -326,7 +326,7 @@ test_that('returning op', {
           )
         )
       ),
-      ... = TRUE
+      ... = FALSE
     )
   )
   expect_equal(real, expected)

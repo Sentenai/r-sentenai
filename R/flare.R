@@ -81,8 +81,7 @@ Select <- setRefClass('Select',
       if (!is.null(projection)) {
         ast$projections <- list(
           explicit = lapply(projection, function(p) p$to_ast()),
-          # TODO: should be able to set `default`
-          ... = TRUE
+          ... = FALSE
         )
       }
 
